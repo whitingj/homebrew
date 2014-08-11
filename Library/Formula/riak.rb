@@ -1,31 +1,45 @@
-require 'formula'
+require "formula"
 
 class Riak < Formula
-  homepage 'http://wiki.basho.com/Riak.html'
+  homepage "http://basho.com/riak/"
+  url "http://s3.amazonaws.com/downloads.basho.com/riak/1.4/1.4.10/osx/10.8/riak-1.4.10-OSX-x86_64.tar.gz"
+  version "1.4.10"
+  sha256 "32f2d4ee89c6b7fd596726e9b385b5d1715a789413b4e7301d0b0da1c4f711e1"
 
-  if Hardware.is_64_bit? and not build.build_32_bit?
-    url 'http://s3.amazonaws.com/downloads.basho.com/riak/1.3/1.3.0/osx/10.6/riak-1.3.0-osx-x86_64.tar.gz'
-    version '1.3.0-x86_64'
-    sha256 '912d724393253583b23df70b695eb6fb56838e3d35eeef8a2fb5360acf55bff9'
-  else
-    url 'http://s3.amazonaws.com/downloads.basho.com/riak/1.3/1.3.0/osx/10.6/riak-1.3.0-osx-i386.tar.gz'
-    version '1.3.0-i386'
-    sha256 '278454d8d0a08602b6b0c3d3c6e1d9f051fe2115f4c439663cc4b5ac65bdf2c5'
+  devel do
+    url "http://s3.amazonaws.com/downloads.basho.com/riak/2.0/2.0.0rc1/osx/10.8/riak-2.0.0rc1-OSX-x86_64.tar.gz"
+    sha256 "785c93fb98ce2ab21ffc7644756bed95c9ba1eae46283536609fa93b0287909d"
+    version "2.0.0-rc1"
   end
 
-  skip_clean 'libexec'
-
-  option '32-bit'
+  depends_on :macos => :mountain_lion
+  depends_on :arch => :x86_64
 
   def install
-    libexec.install Dir['*']
-
-    # The scripts don't dereference symlinks correctly.
-    # Help them find stuff in libexec. - @adamv
-    inreplace Dir["#{libexec}/bin/*"] do |s|
-      s.change_make_var! "RUNNER_SCRIPT_DIR", "#{libexec}/bin"
+    logdir = var + "log/riak"
+    datadir = var + "lib/riak"
+    libexec.install Dir["*"]
+    logdir.mkpath
+    datadir.mkpath
+    (datadir + "ring").mkpath
+    inreplace "#{libexec}/lib/env.sh" do |s|
+      s.change_make_var! "RUNNER_BASE_DIR", libexec
+      s.change_make_var! "RUNNER_LOG_DIR", logdir
     end
-
-    bin.install_symlink Dir["#{libexec}/bin/*"]
+    if build.devel?
+      inreplace "#{libexec}/etc/riak.conf" do |c|
+        c.gsub! /(platform_data_dir *=).*$/, "\\1 #{datadir}"
+        c.gsub! /(platform_log_dir *=).*$/, "\\1 #{logdir}"
+      end
+    else
+      inreplace "#{libexec}/etc/app.config" do |c|
+        c.gsub! './data', datadir
+        c.gsub! './log', logdir
+      end
+    end
+    bin.write_exec_script libexec/"bin/riak"
+    bin.write_exec_script libexec/"bin/riak-admin"
+    bin.write_exec_script libexec/"bin/riak-debug"
+    bin.write_exec_script libexec/"bin/search-cmd"
   end
 end

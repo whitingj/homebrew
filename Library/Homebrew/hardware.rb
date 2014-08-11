@@ -1,30 +1,74 @@
+require 'os'
+
 class Hardware
-  case RUBY_PLATFORM.downcase
-  when /darwin/
+  module CPU extend self
+    INTEL_32BIT_ARCHS = [:i386].freeze
+    INTEL_64BIT_ARCHS = [:x86_64].freeze
+    PPC_32BIT_ARCHS   = [:ppc, :ppc7400, :ppc7450, :ppc970].freeze
+    PPC_64BIT_ARCHS   = [:ppc64].freeze
+
+    def type
+      @type || :dunno
+    end
+
+    def family
+      @family || :dunno
+    end
+
+    def cores
+      @cores || 1
+    end
+
+    def bits
+      @bits || 64
+    end
+
+    def is_32_bit?
+      bits == 32
+    end
+
+    def is_64_bit?
+      bits == 64
+    end
+
+    def intel?
+      type == :intel
+    end
+
+    def ppc?
+      type == :ppc
+    end
+  end
+
+  if OS.mac?
     require 'os/mac/hardware'
-    extend MacOSHardware
-  when /linux/
+    CPU.extend MacCPUs
+  elsif OS.linux?
     require 'os/linux/hardware'
-    extend LinuxHardware
+    CPU.extend LinuxCPUs
   else
     raise "The system `#{`uname`.chomp}' is not supported."
   end
 
   def self.cores_as_words
-    case Hardware.processor_count
+    case Hardware::CPU.cores
     when 1 then 'single'
     when 2 then 'dual'
     when 4 then 'quad'
     else
-      Hardware.processor_count
+      Hardware::CPU.cores
     end
   end
 
-  def self.is_32_bit?
-    not self.is_64_bit?
-  end
-
-  def self.bits
-    Hardware.is_64_bit? ? 64 : 32
+  def self.oldest_cpu
+    if Hardware::CPU.intel?
+      if Hardware::CPU.is_64_bit?
+        :core2
+      else
+        :core
+      end
+    else
+      Hardware::CPU.family
+    end
   end
 end

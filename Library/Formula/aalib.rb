@@ -2,12 +2,19 @@ require 'formula'
 
 class Aalib < Formula
   homepage 'http://aa-project.sourceforge.net/aalib/'
-  url 'http://downloads.sourceforge.net/aa-project/aalib-1.4rc4.tar.gz'
-  sha1 'a11c16b258bf9b64b135858afabc7f3a45222a4a'
+  url 'https://downloads.sourceforge.net/aa-project/aalib-1.4rc5.tar.gz'
+  sha1 'a23269e950a249d2ef93625837cace45ddbce03b'
+
+  bottle do
+    cellar :any
+    sha1 "91868f0ce9e9bbcd9a81206ad925a571144ac866" => :mavericks
+    sha1 "0e5d656547a69220d3f146e00ea82747d0f33aee" => :mountain_lion
+    sha1 "3e46ae8165db31c9c87a7bb344c09211c800153e" => :lion
+  end
 
   # Fix malloc/stdlib issue on OS X
   # Fix underquoted definition of AM_PATH_AALIB in aalib.m4
-  def patches; DATA end
+  patch :DATA
 
   def install
     ENV.ncurses_define
@@ -17,7 +24,8 @@ class Aalib < Formula
                           "--mandir=#{man}",
                           "--infodir=#{info}",
                           "--enable-shared=yes",
-                          "--enable-static=yes"
+                          "--enable-static=yes",
+                          "--without-x"
     system "make install"
   end
 end
@@ -35,16 +43,6 @@ index 09534d2..2ea52f9 100644
  #include "aalib.h"
  #include "aaint.h"
  static void aa_editdisplay(struct aa_edit *e)
-diff --git a/src/aafire.c b/src/aafire.c
-index 6144cff..313f08d 100644
---- a/src/aafire.c
-+++ b/src/aafire.c
-@@ -1,6 +1,5 @@
- #include <stdio.h>
- #include <string.h>
--#include <malloc.h>
- #include <stdlib.h>
- #include "aalib.h"
  
 diff --git a/src/aakbdreg.c b/src/aakbdreg.c
 index def65fe..f4f8efb 100644

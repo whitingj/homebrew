@@ -1,35 +1,21 @@
 require 'formula'
 
 class SshCopyId < Formula
-  homepage 'http://openssh.org/'
-  url 'http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-6.0p1.tar.gz'
-  mirror 'http://ftp.spline.de/pub/OpenBSD/OpenSSH/portable/openssh-6.0p1.tar.gz'
-  version '6.0p1'
-  sha1 'f691e53ef83417031a2854b8b1b661c9c08e4422'
+  homepage 'http://www.openssh.com/'
+  url 'http://ftp.usa.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-6.6p1.tar.gz'
+  mirror 'http://ftp3.usa.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-6.6p1.tar.gz'
+  version '6.6p1'
+  sha1 'b850fd1af704942d9b3c2eff7ef6b3a59b6a6b6e'
+
+  bottle do
+    cellar :any
+    sha1 "c62e6863235b9cb0dc9c78c04971b8692332f935" => :mavericks
+    sha1 "76b719c4c3391344d5aa2d22ded2fcc0db45f2c9" => :mountain_lion
+    sha1 "4b679aea29d2ec0e9fd2292cc7ea6b3955747096" => :lion
+  end
 
   def install
     bin.install 'contrib/ssh-copy-id'
     man1.install 'contrib/ssh-copy-id.1'
   end
-
-  def patches
-    # /bin/sh on the host (fixes an issue with fish shell)
-    # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=390344#10
-    DATA
-  end
 end
-
-__END__
-diff --git a/contrib/ssh-copy-id b/contrib/ssh-copy-id
-index 9451ace..2e4e9ac 100644
---- a/contrib/ssh-copy-id
-+++ b/contrib/ssh-copy-id
-@@ -41,7 +41,7 @@ fi
- # strip any trailing colon
- host=`echo $1 | sed 's/:$//'`
-
--{ eval "$GET_ID" ; } | ssh $host "umask 077; test -d ~/.ssh || mkdir ~/.ssh ; cat >> ~/.ssh/authorized_keys" || exit 1
-+{ eval "$GET_ID" ; } | ssh $host "sh -c 'umask 077; test -d .ssh || mkdir .ssh ; cat >> .ssh/authorized_keys'" || exit 1
-
- cat <<EOF
- Now try logging into the machine, with "ssh '$host'", and check in:
